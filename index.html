@@ -1,7 +1,3 @@
-
-
-
-
 <!DOCTYPE html>
 <html>
 
@@ -24,7 +20,185 @@
 	</style>
 
 	<title>.</title>
-	<script src="main.js"></script>
+	
+	<!-- <script src="main.js"></script> -->
+
+<script>
+
+/*
+References:
+https://jameshfisher.com/2020/08/09/how-to-implement-green-screen-in-the-browser/    
+https://stackoverflow.com/questions/1664785/resize-html5-canvas-to-fit-window
+
+{ facingMode: "user" }  // <- what is this?
+*/
+
+if (window.performance.now) {
+    console.log("Using high performance timer");
+    getTimestamp = function() { return window.performance.now(); };
+} else {
+    if (window.performance.webkitNow) {
+        console.log("Using webkit high performance timer");
+        getTimestamp = function() { return window.performance.webkitNow(); };
+    } else {
+        console.log("Using low performance timer");
+        getTimestamp = function() { return new Date().getTime(); };
+    }
+}
+
+var requestAnimationFrame = window.requestAnimationFrame
+    || window.webkitRequestAnimationFrame
+    || window.mozRequestAnimationFrame
+    || window.msRequestAnimationFrame
+    || function(callback) { return setTimeout(callback, 1000 / 60); };
+
+
+var DELAY = 1000;
+
+// initial values not be used
+var vidW = 320, vidH = 240;
+var outW = 320, outH = 240;
+
+var DISPLAY_COUNT = 16;
+
+function body_onload() {
+
+	if (!navigator.mediaDevices.getUserMedia) {
+		alert("navigator.mediaDevices.getUserMedia not found")
+		return;
+	}
+
+    const blitCanvas = new OffscreenCanvas(0, 0);  // size dynamically assigned per frame
+	var blitCtx;
+
+	var display = document.getElementById("display");
+	var displayCtx;
+
+	var resized = false;	
+
+	var video = document.querySelector("#videoElement");
+
+	var times = [];
+	var frames = [];
+
+	var animation_step = function() {
+
+		var ts = getTimestamp();
+
+		var displayInd = 0;
+		for(var k = frames.length - 1; k >= 0; k--) {
+			var limit = ts - displayInd * DELAY;
+			if (times[k] <= limit) {
+				//console.log("found " + times[k] + " for " + displayInd );
+				//displayCtxs[displayInd].putImageData(frames[k], 0, 0);
+				var i = displayInd % 4;
+				var j = Math.floor(displayInd / 4);
+				displayCtx.putImageData(frames[k], outW * i, outH * j);
+
+				displayInd++;
+				if (displayInd >= DISPLAY_COUNT) 
+					break;
+			}
+		}
+	
+		requestAnimationFrame(animation_step);
+	};
+
+
+	var initialize = function() {
+
+		vidW = video.videoWidth;
+		vidH = video.videoHeight;
+		console.log(video.videoWidth , video.videoHeight);
+
+		var canvasH = window.innerHeight;
+		var canvasW = canvasH * vidW / vidH; // TODO check if page w > h really 
+
+		outH = Math.floor(canvasH / 4);
+		outW = Math.floor(canvasW / 4);
+
+		display.style.width = display.width = outW * 4;
+      	display.style.height = display.height = outH * 4;
+
+		blitCanvas.width = outW;
+		blitCanvas.height = outH;
+
+      	//console.log(window.innerWidth, window.innerHeight);
+      	//console.log(display.width, display.height);
+      	displayCtx = display.getContext("2d");	
+        blitCtx = blitCanvas.getContext("2d");
+
+		requestAnimationFrame(animation_step);
+	};
+
+	var processFrame = function(now, metadata) {
+
+		if (!resized) {
+			initialize();
+			resized = true;
+		}
+
+		var ts = getTimestamp();
+		//console.log("processFrame", video.videoWidth, video.videoHeight);
+
+  		blitCtx.drawImage(video, 0, 0, outW, outH);
+  		const imageData = blitCtx.getImageData(0, 0, outW, outH);
+
+  		frames.push(imageData);
+  		times.push(ts);
+
+
+  		// Purge old frames:
+  		var old_limit = (DISPLAY_COUNT + 0.2) * DELAY;
+
+  		var times2 = [], frames2 = [];
+
+  		var k;
+		for(k = 0; k < frames.length; k++) {
+			if (times[k] >= ts - old_limit) {
+				times2.push(times[k]);
+				frames2.push(frames[k]);
+			}
+		}
+
+  		times = times2;
+  		frames = frames2;
+
+
+		video.requestVideoFrameCallback(processFrame);
+	};	
+
+
+	var startCamera = function() {
+		var constraints = { 
+		    video: {
+		        width: { ideal: 320 },
+		        height: { ideal: 240 } 
+		    } 
+		};
+
+	  	navigator.mediaDevices.getUserMedia(constraints)
+		  	.then(function (stream) {
+		    	video.srcObject = stream;
+		    	video.play();
+		    	video.requestVideoFrameCallback(processFrame);
+		    }).catch(function (err) {
+		      	alert("camera error!");
+		      	return;
+		    });
+	};
+
+	setInterval(function() {
+			console.log("frame cache size:", frames.length);
+		}, 1000);
+	
+
+	startCamera();
+}
+
+</script>
+
+
 </head>
 
 <body onload="body_onload(); ">
@@ -32,19 +206,6 @@
 <canvas id="display" style="background-color: white;"></canvas>
 
 
-<!--
-<div id="displays"> </div>
-<canvas id="display0" style="background-color: black;" width="320" height="240"></canvas>
-<canvas id="display1" style="background-color: black;" width="320" height="240"></canvas>
-<canvas id="display2" style="background-color: black;" width="320" height="240"></canvas>
-<canvas id="display3" style="background-color: black;" width="320" height="240"></canvas>
-<canvas id="display4" style="background-color: black;" width="320" height="240"></canvas>
-<canvas id="display5" style="background-color: black;" width="320" height="240"></canvas>
-<canvas id="display6" style="background-color: black;" width="320" height="240"></canvas>
-<canvas id="display7" style="background-color: black;" width="320" height="240"></canvas>
--->
-
-<!-- style="display:none;" -->
 
 <div id="container" style="display:none;">
 	<video autoplay="true" id="videoElement"></video>

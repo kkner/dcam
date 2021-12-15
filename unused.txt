@@ -1,0 +1,65 @@
+/*
+
+	var numDisplays = 4;
+	var displays = new Array(numDisplays);
+	var displayCtxs = new Array(displays.length);
+	for(var i = 0; i < displays.length; i++) {
+		// <canvas id="display0" style="background-color: black;" width="320" height="240"></canvas>
+
+		var display = document.createElement("canvas");
+		display.width = 320;
+		display.height = 240;
+		display.style.width = 320;
+		display.style.height = 240;
+		//display.className  = "myClass";
+		display.id = "display" + i;
+
+		displaysDiv.appendChild(display);
+		displays[i] = display;
+		//displays[i] = document.getElementById("display" + i);
+	}
+	
+*/
+
+
+
+		//for(var i = 0; i < displays.length; i++) {
+			//var ind = (framesIndex - 1) - i * 10;
+			//ind = (ind + frames.length) % frames.length;
+			//if (frames[ind])
+	  		//	displayCtxs[i].putImageData(frames[ind], 0, 0);
+		//}
+  		
+		//displayCtx.fillStyle = 'green';
+		//displayCtx.fillRect(20, 10, 150, 100);
+
+		//displayCtx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);	
+
+
+
+
+		//console.log(times);
+
+		//const numPixels = imageData.data.length / 4;
+		//for (let i = 0; i < numPixels; i++) {
+		//	const r = imageData.data[i * 4 + 0];
+		//	const g = imageData.data[i * 4 + 1];
+		//	const b = imageData.data[i * 4 + 2];
+		//	//imageData.data[i * 4 + 3] = 255;
+		//}
+
+
+
+<!--
+<div id="displays"> </div>
+<canvas id="display0" style="background-color: black;" width="320" height="240"></canvas>
+<canvas id="display1" style="background-color: black;" width="320" height="240"></canvas>
+<canvas id="display2" style="background-color: black;" width="320" height="240"></canvas>
+<canvas id="display3" style="background-color: black;" width="320" height="240"></canvas>
+<canvas id="display4" style="background-color: black;" width="320" height="240"></canvas>
+<canvas id="display5" style="background-color: black;" width="320" height="240"></canvas>
+<canvas id="display6" style="background-color: black;" width="320" height="240"></canvas>
+<canvas id="display7" style="background-color: black;" width="320" height="240"></canvas>
+-->
+
+<!-- style="display:none;" -->
