@@ -36,7 +36,7 @@ if (window.performance.now) {
     }
 }
 
-var DELAY = 3000;
+var DELAY = 1000;
 
 function body_onload() {
 
@@ -48,12 +48,17 @@ function body_onload() {
     const blitCanvas = new OffscreenCanvas(0, 0);  // size dynamically assigned per frame
 	var blitCtx;
 
+
+
+	var display = document.getElementById("display");
+	var displayCtx;
+
 	var displaysDiv = document.getElementById("displays");
+/*
 
 	var numDisplays = 4;
 	var displays = new Array(numDisplays);
 	var displayCtxs = new Array(displays.length);
-
 	for(var i = 0; i < displays.length; i++) {
 		// <canvas id="display0" style="background-color: black;" width="320" height="240"></canvas>
 
@@ -70,7 +75,7 @@ function body_onload() {
 		//displays[i] = document.getElementById("display" + i);
 	}
 	
-
+*/
 	var resized = false;	
 
 	var video = document.querySelector("#videoElement");
@@ -85,15 +90,18 @@ function body_onload() {
 		var ts = getTimestamp();
 
 		if (!resized) {
-			blitCanvas.width = video.videoWidth;
-			blitCanvas.height = video.videoHeight;
+			blitCanvas.width = 320;
+			blitCanvas.height = 240;
 
-			//display0.style.width = display0.width = video.videoWidth;
-          	//display0.style.height = display0.height = video.videoHeight;
+			display.style.width = display.width = Math.floor(window.innerHeight * 320 / 240);
+          	display.style.height = display.height = window.innerHeight;
+          	console.log(window.innerWidth, window.innerHeight);
+          	console.log(display.width, display.height);
+          	displayCtx = display.getContext("2d");
 		
-			for(var i = 0; i < displays.length; i++) {
-				displayCtxs[i] = displays[i].getContext("2d");
-			}
+			//for(var i = 0; i < displays.length; i++) {
+			//	displayCtxs[i] = displays[i].getContext("2d");
+			//}
 
 	        blitCtx = blitCanvas.getContext("2d");
 
@@ -102,8 +110,8 @@ function body_onload() {
 
 		//console.log("processFrame", video.videoWidth, video.videoHeight);
 
-  		blitCtx.drawImage(video, 0, 0, displays[0].width, displays[0].height);
-  		const imageData = blitCtx.getImageData(0, 0, displays[0].width, displays[0].height);
+  		blitCtx.drawImage(video, 0, 0, 320, 240);
+  		const imageData = blitCtx.getImageData(0, 0, 320, 240);
 
   		frames.push(imageData);
   		times.push(ts);
@@ -111,7 +119,9 @@ function body_onload() {
 
   		// removes too old frames:
 
-  		var old_limit = (displays.length + 0.2) * DELAY;
+  		var DISPLAY_COUNT = 16;
+
+  		var old_limit = (DISPLAY_COUNT + 0.2) * DELAY;
 
   		var k;
 		for(k = 0; k < frames.length; k++) {
@@ -140,16 +150,19 @@ function body_onload() {
 		for(var k = frames.length - 1; k >= 0; k--) {
 			var limit = ts - displayInd * DELAY;
 			if (times[k] <= limit) {
-				console.log("found " + times[k] + " for " + displayInd );
-				displayCtxs[displayInd].putImageData(frames[k], 0, 0);
+				//console.log("found " + times[k] + " for " + displayInd );
+				//displayCtxs[displayInd].putImageData(frames[k], 0, 0);
+				var i = displayInd % 4;
+				var j = Math.floor(displayInd / 4);
+				displayCtx.putImageData(frames[k], 320 * i, 240 * j);
+
 				displayInd++;
-				if (displayInd >= displays.length) 
+				if (displayInd >= DISPLAY_COUNT) 
 					break;
 			}
 		}
 
 		//for(var i = 0; i < displays.length; i++) {
-
 			//var ind = (framesIndex - 1) - i * 10;
 			//ind = (ind + frames.length) % frames.length;
 			//if (frames[ind])

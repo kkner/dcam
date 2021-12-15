@@ -7,18 +7,33 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>.</title>
 
+	<style>
+		html, body {
+		  width:  100%;
+		  height: 100%;
+		  margin: 0px;
+		  padding: 0px;
+		  border: 0px;
+		}
+		#display {
+		  margin: 0px;
+		  padding: 0px;
+		  border: 0px;
+		}
+	</style>
+
+	<title>.</title>
 	<script src="main.js"></script>
 </head>
 
 <body onload="body_onload(); ">
 
-<div id="displays">
-</div>
+<canvas id="display" style="background-color: white;"></canvas>
 
 
 <!--
+<div id="displays"> </div>
 <canvas id="display0" style="background-color: black;" width="320" height="240"></canvas>
 <canvas id="display1" style="background-color: black;" width="320" height="240"></canvas>
 <canvas id="display2" style="background-color: black;" width="320" height="240"></canvas>
