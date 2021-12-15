@@ -36,6 +36,17 @@ if (window.performance.now) {
     }
 }
 
+
+var requestAnimationFrame = window.requestAnimationFrame
+    || window.webkitRequestAnimationFrame
+    || window.mozRequestAnimationFrame
+    || window.msRequestAnimationFrame
+    || function(callback) { return setTimeout(callback, 1000 / 60); };
+
+
+
+                                            //8
+
 var DELAY = 1000;
 
 function body_onload() {
@@ -84,9 +95,46 @@ function body_onload() {
 	var times = [];
 	var frames = [];
 
+	// initial values will not be used
 	var vidW = 320, vidH = 240;
 	var outW = 320, outH = 240;
 
+	var DISPLAY_COUNT = 16;
+
+	var animation_step = function() {
+		console.log("animation step");
+
+		var ts = getTimestamp();
+
+		var displayInd = 0;
+		for(var k = frames.length - 1; k >= 0; k--) {
+			var limit = ts - displayInd * DELAY;
+			if (times[k] <= limit) {
+				//console.log("found " + times[k] + " for " + displayInd );
+				//displayCtxs[displayInd].putImageData(frames[k], 0, 0);
+				var i = displayInd % 4;
+				var j = Math.floor(displayInd / 4);
+				displayCtx.putImageData(frames[k], outW * i, outH * j);
+
+				displayInd++;
+				if (displayInd >= DISPLAY_COUNT) 
+					break;
+			}
+		}
+
+		//for(var i = 0; i < displays.length; i++) {
+			//var ind = (framesIndex - 1) - i * 10;
+			//ind = (ind + frames.length) % frames.length;
+			//if (frames[ind])
+	  		//	displayCtxs[i].putImageData(frames[ind], 0, 0);
+		//}
+  		
+		//displayCtx.fillStyle = 'green';
+		//displayCtx.fillRect(20, 10, 150, 100);
+
+		//displayCtx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);		
+		requestAnimationFrame(animation_step);
+	};
 
 	var processFrame = function(now, metadata) {
 
@@ -122,7 +170,10 @@ function body_onload() {
 	        blitCtx = blitCanvas.getContext("2d");
 
 			resized = true;
+			requestAnimationFrame(animation_step);
+
 		}
+
 
 		//console.log("processFrame", video.videoWidth, video.videoHeight);
 
@@ -135,7 +186,6 @@ function body_onload() {
 
   		// removes too old frames:
 
-  		var DISPLAY_COUNT = 16;
 
   		var old_limit = (DISPLAY_COUNT + 0.2) * DELAY;
 
@@ -162,33 +212,7 @@ function body_onload() {
 
 
 
-		var displayInd = 0;
-		for(var k = frames.length - 1; k >= 0; k--) {
-			var limit = ts - displayInd * DELAY;
-			if (times[k] <= limit) {
-				//console.log("found " + times[k] + " for " + displayInd );
-				//displayCtxs[displayInd].putImageData(frames[k], 0, 0);
-				var i = displayInd % 4;
-				var j = Math.floor(displayInd / 4);
-				displayCtx.putImageData(frames[k], outW * i, outH * j);
 
-				displayInd++;
-				if (displayInd >= DISPLAY_COUNT) 
-					break;
-			}
-		}
-
-		//for(var i = 0; i < displays.length; i++) {
-			//var ind = (framesIndex - 1) - i * 10;
-			//ind = (ind + frames.length) % frames.length;
-			//if (frames[ind])
-	  		//	displayCtxs[i].putImageData(frames[ind], 0, 0);
-		//}
-  		
-		//displayCtx.fillStyle = 'green';
-		//displayCtx.fillRect(20, 10, 150, 100);
-
-		//displayCtx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
 
 		video.requestVideoFrameCallback(processFrame);
@@ -211,6 +235,7 @@ function body_onload() {
 	      	alert("camera error!");
 	      	return;
 	    });
+
 
 
 }
