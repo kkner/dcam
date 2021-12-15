@@ -1,12 +1,12 @@
 /*
 
-  { facingMode: "user" } 
+ { facingMode: "user" } 
  what is this?
 
- source
+source
 https://jameshfisher.com/2020/08/09/how-to-implement-green-screen-in-the-browser/    
 
-
+https://stackoverflow.com/questions/1664785/resize-html5-canvas-to-fit-window
 
 
 
@@ -84,19 +84,35 @@ function body_onload() {
 	var times = [];
 	var frames = [];
 
+	var vidW = 320, vidH = 240;
+	var outW = 320, outH = 240;
+
 
 	var processFrame = function(now, metadata) {
 
 		var ts = getTimestamp();
 
 		if (!resized) {
-			blitCanvas.width = 320;
-			blitCanvas.height = 240;
 
-			display.style.width = display.width = Math.floor(window.innerHeight * 320 / 240);
-          	display.style.height = display.height = window.innerHeight;
-          	console.log(window.innerWidth, window.innerHeight);
-          	console.log(display.width, display.height);
+			vidW = video.videoWidth;
+			vidH = video.videoHeight;
+			console.log(video.videoWidth , video.videoHeight);
+
+
+			var canvasH = window.innerHeight;
+			var canvasW = canvasH * vidW / vidH; // TODO check if page w > h really 
+
+			outH = Math.floor(canvasH / 4);
+			outW = Math.floor(canvasW / 4);
+
+			display.style.width = display.width = outW * 4;
+          	display.style.height = display.height = outH * 4;
+
+			blitCanvas.width = outW;
+			blitCanvas.height = outH;
+
+          	//console.log(window.innerWidth, window.innerHeight);
+          	//console.log(display.width, display.height);
           	displayCtx = display.getContext("2d");
 		
 			//for(var i = 0; i < displays.length; i++) {
@@ -110,8 +126,8 @@ function body_onload() {
 
 		//console.log("processFrame", video.videoWidth, video.videoHeight);
 
-  		blitCtx.drawImage(video, 0, 0, 320, 240);
-  		const imageData = blitCtx.getImageData(0, 0, 320, 240);
+  		blitCtx.drawImage(video, 0, 0, outW, outH);
+  		const imageData = blitCtx.getImageData(0, 0, outW, outH);
 
   		frames.push(imageData);
   		times.push(ts);
@@ -154,7 +170,7 @@ function body_onload() {
 				//displayCtxs[displayInd].putImageData(frames[k], 0, 0);
 				var i = displayInd % 4;
 				var j = Math.floor(displayInd / 4);
-				displayCtx.putImageData(frames[k], 320 * i, 240 * j);
+				displayCtx.putImageData(frames[k], outW * i, outH * j);
 
 				displayInd++;
 				if (displayInd >= DISPLAY_COUNT) 
@@ -178,13 +194,22 @@ function body_onload() {
 		video.requestVideoFrameCallback(processFrame);
 	};	
 
-  	navigator.mediaDevices.getUserMedia({ video: true })
+	var constraints = { 
+	    video: {
+	        width: { ideal: 320 },
+	        height: { ideal: 240 } 
+	    } 
+	};
+
+
+  	navigator.mediaDevices.getUserMedia(constraints)
 	  	.then(function (stream) {
 	    	video.srcObject = stream;
 	    	video.play();
 	    	video.requestVideoFrameCallback(processFrame);
 	    }).catch(function (err) {
-	      console.log("camera error!");
+	      	alert("camera error!");
+	      	return;
 	    });
 
 
