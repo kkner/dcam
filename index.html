@@ -59,7 +59,244 @@ var DELAY = 1000;
 var vidW = 320, vidH = 240;
 var outW = 320, outH = 240;
 
-var DISPLAY_COUNT = 16;
+var BIN_COLS = 4;
+var BIN_ROWS = 4;
+var DISPLAY_COUNT = BIN_COLS * BIN_ROWS;
+var purgeLimitOffset = 200; // milliseconds.
+var purgeLimit = DISPLAY_COUNT * DELAY + purgeLimitOffset;
+
+
+
+
+var assert = function(cond) {
+	if (!cond) 
+		throw "assert failed";
+};
+var assertEquals = function(a, b) {
+	assert(a === b);
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var binSearch = function(keys, key, lo, hi) {
+	// Find index of leftmost key >= given key
+	// lo, hi both inclusive
+
+	while(lo <= hi) {
+		var m = lo + Math.floor((hi + 1 - lo) / 2);
+
+		//console.log(lo, hi, m, keys[m], key);
+
+		if (keys[m] <= key) {
+			lo = m + 1;
+		} else {	
+			hi = m - 1;
+		}
+
+	}
+	return lo;
+};
+
+var binSearch_full = function(keys, key) {
+	return binSearch(keys, key, 0, keys.length - 1);
+};
+
+var binSearch2_brute = function(times, limit, lo, hi) {
+	var k;
+	for(k = hi; k >= lo; k--) {
+		if (times[k] <= limit) {
+			return k;
+		}
+	}	
+	return -1;
+};
+
+var binSearch2_brute_full = function(times, limit) {
+	return binSearch2_brute(times, limit, 0, times.length - 1);
+};
+
+// Find index of rightmost key <= given key
+// lo, hi both inclusive
+var binSearch2 = function(keys, key, lo, hi) {
+	if(lo > hi) return hi;
+
+	var m = lo + Math.ceil((hi - lo) / 2);
+
+	if (keys[m] === key) {
+		return m;
+	} else if (keys[m] < key) {
+		return binSearch2(keys, key, m + 1, hi);
+	} else {	
+		return binSearch2(keys, key, lo, m - 1);
+	}
+
+};
+
+var binSearch2_full = function(times, limit) {
+	return binSearch2(times, limit, 0, times.length - 1);
+};
+
+
+var test_bin_search_exhaustive = function() {
+
+	var generate = function(sz, lo, hi) {
+
+		var arr = new Array(sz);
+		var all_inputs = [];
+
+		var fillArray = function(depth, arr, low) {
+			if (depth >= arr.length) {
+				all_inputs.push(arr.slice());
+			} else {
+				for(var i = low; i <= hi; i++) {
+					arr[depth] = i;
+					fillArray(depth + 1, arr, i);
+				}
+			}
+		};
+
+		fillArray(0, arr, lo);
+
+		return all_inputs;
+	};
+
+	var lo = 1, hi = 8;
+
+	var test_input = function(arr) {
+
+
+		for(var i = lo - 1; i <= hi + 1; i++) {
+			var val = binSearch2(arr, i, 0, arr.length - 1);
+			var exp = binSearch2_brute(arr, i, 0, arr.length - 1);
+			try {
+				if (exp === -1) {
+					assertEquals(exp, val);
+				} else {
+					// For arrays with multiple target values, does not have to produce the exact index.
+					//if (exp !== val) console.log(arr, i, val, exp);
+					assertEquals(arr[exp], arr[val]);
+				}
+			} catch(e) {
+				console.log(arr, i, val, exp);
+			}
+		}
+
+	};
+
+	for(var sz = 2; sz < 7; sz++) {
+		var all_inputs = generate(sz, lo, hi);
+		for(var i in all_inputs) {
+			test_input(all_inputs[i]);
+		}
+	}
+
+
+};
+
+var test_bin_search = function() {
+
+
+	test_bin_search_exhaustive();
+
+	var keys = [];
+	var items = [];
+
+	assertEquals(3, binSearch_full([2,3,3,7,8], 3));
+
+	assertEquals(0, binSearch_full([2,4], 1));
+	assertEquals(1, binSearch_full([2,4], 2));
+	assertEquals(1, binSearch_full([2,4], 3));
+	assertEquals(2, binSearch_full([2,4], 4));
+	assertEquals(2, binSearch_full([2,4], 5));
+	assertEquals(0, binSearch_full([2], 1));
+	assertEquals(1, binSearch_full([2], 2));
+	assertEquals(1, binSearch_full([2], 3));
+	assertEquals(0, binSearch_full([], 1));
+
+	
+	assertEquals(-1, binSearch2_full([3,4], 2));
+	assertEquals(0, binSearch2_full([3,4], 3));
+	assertEquals(0, binSearch2_full([3,4], 3.5));
+	assertEquals(1, binSearch2_full([3,4], 4));
+	assertEquals(1, binSearch2_full([3,4], 4.5));
+	assertEquals(-1, binSearch2_full([3], 2));
+	assertEquals(3, binSearch2_full([3,4,5,6,7,8], 6));
+	assertEquals(2, binSearch2_full([3,4,5,6,7,8], 5.5));
+
+	assertEquals(-1, binSearch2_full([3,4,5], 2.5));
+	assertEquals(0, binSearch2_full([3,4,5], 3));
+	assertEquals(0, binSearch2_full([3,4,5], 3.5));
+	assertEquals(1, binSearch2_full([3,4,5], 4));
+	assertEquals(1, binSearch2_full([3,4,5], 4.5));
+	assertEquals(2, binSearch2_full([3,4,5], 5));
+	assertEquals(2, binSearch2_full([3,4,5], 6));
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function body_onload() {
 
@@ -81,27 +318,72 @@ function body_onload() {
 	var times = [];
 	var frames = [];
 
+
+	var animFrameCount = 0;
+
+	var blit_frame = function(k, displayInd) {
+
+		var frame = frames[k];
+		if (!frame) return;
+
+		// Calculate bin indices.
+		var i = Math.floor(displayInd % BIN_ROWS);
+		var j = Math.floor(displayInd / BIN_ROWS);
+
+		// Calculate coordinates.
+		var x = outW * i;
+		var y = outH * j;
+
+		// Blit image.
+		displayCtx.putImageData(frame, x, y);
+
+	};
+
+
+	var blit_frames = function(ts) {
+		
+		for (var displayInd = 0; displayInd < DISPLAY_COUNT; displayInd++) {
+			var limit = ts - displayInd * DELAY;
+			var k = binSearch2(times, limit, 0, times.length - 1);
+			if (k >= 0) 
+				blit_frame(k, displayInd);
+		}
+
+	};
+
+	var blit_frames_brute = function(ts) {
+		var displayInd = 0;
+		var limit = ts;
+		// Iterate over frames in reverse.
+		for(var k = frames.length - 1; k >= 0; k--) {
+
+			// times is in ascending order.
+			if (times[k] > limit) 
+				continue;
+
+			blit_frame(k, displayInd);
+
+			// Select next frame.
+			displayInd++;
+			if (displayInd >= DISPLAY_COUNT) 
+				break;
+
+			// Update limit.			
+			limit = ts - displayInd * DELAY;
+		}	
+	};
+
 	var animation_step = function() {
+		requestAnimationFrame(animation_step);
+
+		animFrameCount++;
+
+		// Skip every other frame (likely 30 fps).
+		//if (animFrameCount % 2 === 1)  return;
 
 		var ts = getTimestamp();
 
-		var displayInd = 0;
-		for(var k = frames.length - 1; k >= 0; k--) {
-			var limit = ts - displayInd * DELAY;
-			if (times[k] <= limit) {
-				//console.log("found " + times[k] + " for " + displayInd );
-				//displayCtxs[displayInd].putImageData(frames[k], 0, 0);
-				var i = displayInd % 4;
-				var j = Math.floor(displayInd / 4);
-				displayCtx.putImageData(frames[k], outW * i, outH * j);
-
-				displayInd++;
-				if (displayInd >= DISPLAY_COUNT) 
-					break;
-			}
-		}
-	
-		requestAnimationFrame(animation_step);
+		blit_frames(ts);
 	};
 
 
@@ -109,26 +391,58 @@ function body_onload() {
 
 		vidW = video.videoWidth;
 		vidH = video.videoHeight;
-		console.log(video.videoWidth , video.videoHeight);
+		console.log("input video size", video.videoWidth , video.videoHeight);
 
-		var canvasH = window.innerHeight;
-		var canvasW = canvasH * vidW / vidH; // TODO check if page w > h really 
+		var canvasW, canvasH;
+		if (window.innerHeight <= window.innerWidth) {
+			canvasH = window.innerHeight;
+			canvasW = canvasH * vidW / vidH;
+		} else {
+			canvasW = window.innerWidth;
+			canvasH = canvasW * vidH / vidW;
+		}
 
-		outH = Math.floor(canvasH / 4);
-		outW = Math.floor(canvasW / 4);
+		outH = Math.floor(canvasH / BIN_ROWS);
+		outW = Math.floor(canvasW / BIN_COLS);
 
-		display.style.width = display.width = outW * 4;
-      	display.style.height = display.height = outH * 4;
+		display.style.width = display.width = outW * BIN_COLS;
+      	display.style.height = display.height = outH * BIN_ROWS;
 
 		blitCanvas.width = outW;
 		blitCanvas.height = outH;
 
-      	//console.log(window.innerWidth, window.innerHeight);
-      	//console.log(display.width, display.height);
+      	console.log("window size", window.innerWidth, window.innerHeight);
+      	console.log("display canvas size", display.width, display.height);
       	displayCtx = display.getContext("2d");	
         blitCtx = blitCanvas.getContext("2d");
 
 		requestAnimationFrame(animation_step);
+	};
+
+	var purge_old_frames = function(ts) {
+  		// ts - purgeLimit inclusive
+  		var point = binSearch2_full(times, ts - purgeLimit);
+  		if (point >= 0) {
+  			times.splice(0, point);
+  			frames.splice(0, point);
+  		}
+	};
+
+	var purge_old_frames_brute = function(ts) {
+
+ 		// ts - purgeLimit exclusive
+  		var times2 = [], frames2 = [];
+
+  		var k;
+		for(k = 0; k < frames.length; k++) {
+			if (times[k] >= ts - purgeLimit) {
+				times2.push(times[k]);
+				frames2.push(frames[k]);
+			}
+		}
+
+  		times = times2;
+  		frames = frames2;
 	};
 
 	var processFrame = function(now, metadata) {
@@ -144,26 +458,13 @@ function body_onload() {
   		blitCtx.drawImage(video, 0, 0, outW, outH);
   		const imageData = blitCtx.getImageData(0, 0, outW, outH);
 
-  		frames.push(imageData);
+  		// Assume ts >= last frame ts
   		times.push(ts);
+  		frames.push(imageData);
 
 
   		// Purge old frames:
-  		var old_limit = (DISPLAY_COUNT + 0.2) * DELAY;
-
-  		var times2 = [], frames2 = [];
-
-  		var k;
-		for(k = 0; k < frames.length; k++) {
-			if (times[k] >= ts - old_limit) {
-				times2.push(times[k]);
-				frames2.push(frames[k]);
-			}
-		}
-
-  		times = times2;
-  		frames = frames2;
-
+  		purge_old_frames(ts);
 
 		video.requestVideoFrameCallback(processFrame);
 	};	
@@ -188,11 +489,17 @@ function body_onload() {
 		    });
 	};
 
+	test_bin_search();
+
+	// For testing:
+	var dont_run = false;
+	if (dont_run)
+		return;
+
 	setInterval(function() {
 			console.log("frame cache size:", frames.length);
 		}, 1000);
 	
-
 	startCamera();
 }
 
@@ -215,4 +522,3 @@ function body_onload() {
 </body>
 
 </html>
-
