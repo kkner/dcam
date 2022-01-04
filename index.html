@@ -468,6 +468,12 @@ function body_onload() {
 
 	var processFrame = function(now, metadata) {
 
+  		setVideoFrameCallback();
+
+  		// First frame has not arrived yet:
+		if (video.videoWidth == 0)
+			return;
+
 		if (!resized) {
 			initialize();
 			resized = true;
@@ -487,7 +493,6 @@ function body_onload() {
   		// Purge old frames:
   		purge_old_frames(ts);
 
-  		setVideoFrameCallback();
 
 	};	
 
