@@ -482,15 +482,27 @@ function body_onload() {
   		// Purge old frames:
   		purge_old_frames(ts);
 
-		video.requestVideoFrameCallback(processFrame);
+  		setVideoFrameCallback();
+
 	};	
 
+	var targetFramerate = 30;
+	var assumedFramerate = targetFramerate;
+
+	var setVideoFrameCallback = function() {
+		if (video.requestVideoFrameCallback) {
+			video.requestVideoFrameCallback(processFrame);
+		} else {
+			setTimeout(processFrame, 1000 / targetFramerate);
+		}
+	};
 
 	var startCamera = function() {
 		var constraints = { 
 		    video: {
 		        width: { ideal: 320 },
-		        height: { ideal: 240 } 
+		        height: { ideal: 240 }
+		        ,frameRate: { ideal: targetFramerate },
 		    } 
 		};
 
@@ -498,9 +510,15 @@ function body_onload() {
 		  	.then(function (stream) {
 		    	video.srcObject = stream;
 		    	video.play();
-		    	video.requestVideoFrameCallback(processFrame);
+		    	if (video.requestVideoFrameCallback) {
+		    		console.log("requestVideoFrameCallback available");
+		    	} else {
+		    		console.log("requestVideoFrameCallback not available");
+		    	}
+		  		setVideoFrameCallback();
 		    }).catch(function (err) {
 		    	console.log(err);
+		    	alert("Something wrong happened with camera.")
 		      	return;
 		    });
 	};
