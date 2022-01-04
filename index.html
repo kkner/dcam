@@ -413,9 +413,14 @@ function body_onload() {
 			canvasW = window.innerWidth;
 			canvasH = canvasW * vidH / vidW;
 		}
+		console.log("canvasW", canvasW);
+		console.log("canvasH", canvasH);
 
 		outH = Math.floor(canvasH / BIN_ROWS);
 		outW = Math.floor(canvasW / BIN_COLS);
+
+		console.log("outW", outW);
+		console.log("outH", outH);
 
 		display.style.width = display.width = outW * BIN_COLS;
       	display.style.height = display.height = outH * BIN_ROWS;
