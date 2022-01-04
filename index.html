@@ -305,8 +305,20 @@ function body_onload() {
 		return;
 	}
 
-    const blitCanvas = new OffscreenCanvas(0, 0);  // size dynamically assigned per frame
-	var blitCtx;
+
+
+	var blitCanvas = undefined;
+
+	try {
+	    blitCanvas = new OffscreenCanvas(0, 0);  // size dynamically assigned per frame
+	} catch (e) {
+	    if (e instanceof ReferenceError) {
+	    	console.log("caught ReferenceError, OffscreenCanvas not available. using invisible canvas");
+			blitCanvas = document.getElementById("invisible");
+	    }
+	}
+
+	var blitCtx = undefined;
 
 	var display = document.getElementById("display");
 	var displayCtx;
@@ -409,7 +421,11 @@ function body_onload() {
       	display.style.height = display.height = outH * BIN_ROWS;
 
 		blitCanvas.width = outW;
-		blitCanvas.height = outH;
+      	blitCanvas.height = outH;
+      	if (blitCanvas.style) {
+			blitCanvas.style.width = blitCanvas.width;
+	      	blitCanvas.style.height = blitCanvas.height;
+      	}
 
       	console.log("window size", window.innerWidth, window.innerHeight);
       	console.log("display canvas size", display.width, display.height);
@@ -512,7 +528,7 @@ function body_onload() {
 
 <canvas id="display" style="background-color: white;"></canvas>
 
-
+<canvas id="invisible" style="display:none;"></canvas>
 
 <div id="container" style="display:none;">
 	<video autoplay="true" id="videoElement"></video>
