@@ -500,7 +500,7 @@ function body_onload() {
 		    	video.play();
 		    	video.requestVideoFrameCallback(processFrame);
 		    }).catch(function (err) {
-		      	alert("camera error!");
+		    	console.log(err);
 		      	return;
 		    });
 	};
